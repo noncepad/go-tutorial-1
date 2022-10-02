@@ -96,7 +96,7 @@ type Fruit struct{
 }
 // both styles are ok, but the second one is more convenient in keeping functions clear.
 // func EatFruitKeepState(f *Fruit) bool 
-func (f *Fruit)EatFruitKeepState bool{
+func (f *Fruit)EatFruitKeepState() bool{
     if f==nil{
         panic("no fruit")
     }
