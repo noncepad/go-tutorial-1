@@ -124,7 +124,7 @@ go f.EatFruitKeepState()
 ```
 
 ```go
-func loopInternal(ctx context.Context, internalC <-func(*Fruit), initialState *Fruit){
+func loopInternal(ctx context.Context, internalC <-chan func(*Fruit), initialState *Fruit){
     log.Print("entering loop")
     in:=intialState
 out:
