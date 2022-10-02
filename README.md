@@ -156,3 +156,26 @@ internalC<-func(f *Fruit){
 didIEatTheFruit:=<-ansC
 log.Printf("did I eat the fruit? %b",didIEatTheFruit)
 ```
+
+`ctx` is the common way to refer to a *context*.  In Golang, developers are expected to spawn many goroutines.  Manually using channels to make sure all of the goroutines have not had an error or properly exit when the program is exiting is difficult.  Context simplifies this task.  
+
+Context objects are hereditary.
+
+```go
+ctxChild,cancelChild:=context.WithCancel(ctxParent)
+```
+
+To close a context:
+
+```go
+cancelChild()
+```
+
+Canceling means that:
+
+```go
+<-ctxChild.Done()
+log.Print("context has been canceled")
+```
+
+See the loopInternal function above.  Once the context has been canceled, the goroutine will exit.  It is safe to pass context objects around as they pass-by-value.
