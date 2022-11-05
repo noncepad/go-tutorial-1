@@ -29,12 +29,16 @@ func TestAddress(t *testing.T) {
 	}
 
 	ctx := context.Background()
+	// RPC=remote process call;
+	// rpcClient talks to a Solana Validator
 	rpcClient := sgorpc.New("https://api.devnet.solana.com")
 
+	// get free fake-money from Solana
 	_, err = rpcClient.RequestAirdrop(ctx, w.PublicKey(), sgo.LAMPORTS_PER_SOL/2, sgorpc.CommitmentFinalized)
 	if err != nil {
 		t.Fatal(err)
 	}
+	// sleep to give time for Solana to process the airdrop request
 	time.Sleep(10 * time.Second)
 	bh, err := rpcClient.GetBalance(ctx, w.PublicKey(), sgorpc.CommitmentFinalized)
 	if err != nil {
@@ -46,16 +50,16 @@ func TestAddress(t *testing.T) {
 }
 
 func TestLoadWallet(t *testing.T) {
+	clusterUrl := "https://api.devnet.solana.com"
 	myPrivateKey := "1mBuFj84ek75zucKeBD2xCYexrDujzqg1KMfTL8K3s6eqUD7QZBduWgQTmWk4xzfhCThyA85P5aSXsrVmMFCWSy"
-	w, err := solana.LoadWallet(myPrivateKey)
+	w, err := solana.LoadWallet(clusterUrl, myPrivateKey)
 	if err != nil {
 		t.Fatal(err)
-
 	}
 
 	ctx := context.Background()
 	// ctx so we do not wait forever
-	rpcClient := sgorpc.New("https://api.devnet.solana.com")
+	rpcClient := sgorpc.New(clusterUrl)
 	//remote procedure call
 
 	_, err = rpcClient.RequestAirdrop(
@@ -78,34 +82,42 @@ func TestLoadWallet(t *testing.T) {
 }
 
 func TestTransferWallet(t *testing.T) {
-	// Transfer from Alice to Bob
-	BobPrivateKey := "3Kj5JrzKfLEjJW9xkG4eYB2vGjBbTdG5u6TcAmh7xaftVuFwGpUidDdNpAKCLecojPM4A28RhyjEEyq6zbEUYqu3"
-	AlicePrivateKey := "1mBuFj84ek75zucKeBD2xCYexrDujzqg1KMfTL8K3s6eqUD7QZBduWgQTmWk4xzfhCThyA85P5aSXsrVmMFCWSy"
-	_, err := solana.LoadWallet(BobPrivateKey)
-	if err != nil {
-		t.Fatal(err)
-
-	}
-	aw, err := solana.LoadWallet(AlicePrivateKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// type here....
 	ctx := context.Background()
-	rpcClient := sgorpc.New("https://api.devnet.solana.com")
+	clusterUrl := "https://api.devnet.solana.com"
+
+	// Transfer from Alice to Bob
+
+	alicePrivateKey := "1mBuFj84ek75zucKeBD2xCYexrDujzqg1KMfTL8K3s6eqUD7QZBduWgQTmWk4xzfhCThyA85P5aSXsrVmMFCWSy"
+	aw, err := solana.LoadWallet(clusterUrl, alicePrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bobPrivateKey := "3Kj5JrzKfLEjJW9xkG4eYB2vGjBbTdG5u6TcAmh7xaftVuFwGpUidDdNpAKCLecojPM4A28RhyjEEyq6zbEUYqu3"
+	bw, err := solana.LoadWallet(clusterUrl, bobPrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// fetch Alice's balance, then send half of her balance to Bob
-	{
-		result, err := rpcClient.GetBalance(ctx, aw.PublicKey(), sgorpc.CommitmentFinalized)
-		if err != nil {
-			t.Fatal(err)
-		}
-		AliceBalance := result.Value
-		amount := AliceBalance / 2 // what happens to fractions?  Joel doesn't know, but doesn't care.
+	beforeBalance, err := aw.Balance(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	amount := beforeBalance / 2
 
-		log.Printf("AliceBalance=%d", AliceBalance)
-		log.Printf("Alice will send %d to Bob", amount)
-		t.Fatal("kill me")
+	// what happens if Transfer fails
+	err = aw.Transfer(ctx, amount, bw.PublicKey())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	afterBalance, err := aw.Balance(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if beforeBalance > afterBalance {
+		t.Fatal(err)
 	}
 }

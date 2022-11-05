@@ -1,6 +1,9 @@
 package main_test
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestChannel(t *testing.T) {
 	a := 1
@@ -14,7 +17,7 @@ func TestChannel(t *testing.T) {
 	go addInSeparateGoRoutine(a, b, ansC)
 	ans := <-ansC
 	if ans != c {
-		t.Logf("ans=%d", ans)
+		t.Logf("ans=%d at time=%d", ans, time.Now().Unix())
 		t.Fatal("answers do not match")
 	}
 }
@@ -24,5 +27,6 @@ func addMyNumbers(a int, b int) int {
 }
 
 func addInSeparateGoRoutine(a int, b int, ansC chan<- int) {
+	time.Sleep(3 * time.Minute)
 	ansC <- addMyNumbers(a, b)
 }
